@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>User Management</title>
+</head>
+<body>
+  <h1>Booking Appointment App</h1>
+  <form id="userForm">
+    <input type="text" id="name" placeholder="Name" required>
+    <input type="email" id="email" placeholder="Email" required>
+    <input type="password" id="password" placeholder="Password" required>
+    <input type="text" id="contact" placeholder="Contact Number" required pattern="[0-9]{10,15}">
+    <button type="submit">Book</button>
+  </form>
+  <h2>Users</h2>
+  <ul id="userList"></ul>
+
+  <script>
+    const form = document.getElementById('userForm');
+    const userList = document.getElementById('userList');
+
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const name = document.getElementById('name').value;
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+      const contact = document.getElementById('contact').value;
+
+      const response = await fetch('/api/add-user', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, password , contact})
+      });
+
+      if (response.ok) {
+        loadUsers();
+      document.getElementById('name').value ='';
+      document.getElementById('email').value ='';
+      document.getElementById('password').value ='';
+      document.getElementById('contact').value ='';
+
+      } else {
+        alert('Failed to add user');
+      }
+    });
+
+    async function loadUsers() {
+      const response = await fetch('/api/users');
+      const users = await response.json();
+      userList.innerHTML = '';
+      users.forEach(user => {
+        const li = document.createElement('li');
+        li.textContent = `${user.name} (${user.email})`;
+        const deleteButton = document.createElement('button');
+        deleteButton.textContent = 'Delete';
+        deleteButton.onclick = async () => {
+          await fetch(`/api/delete-user/${user.id}`, { method: 'DELETE' });
+          loadUsers();
+        };
+        const editButton = document.createElement('button');
+        editButton.textContent = 'Edit';
+        editButton.onclick = async () => {
+          console.log(` editing user : ${user.id}`);
+        };
+        li.appendChild(deleteButton);
+        li.appendChild(editButton);
+        userList.appendChild(li);
+      });
+    }
+
+    loadUsers();
+  </script>
+</body>
+</html>
